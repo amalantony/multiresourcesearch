@@ -18,7 +18,7 @@ func getDuckDuckGoResults(query string, r chan Results, e chan error) {
 	}
 	res, err := myClient.Get(url)
 	if err != nil {
-		e <- err
+		e <- &SearchError{source: "duckduckgo", message: "Request Timed out"}
 		return
 	}
 	dec := json.NewDecoder(res.Body)
@@ -27,7 +27,7 @@ func getDuckDuckGoResults(query string, r chan Results, e chan error) {
 		if err := dec.Decode(&response); err == io.EOF {
 			break
 		} else if err != nil {
-			e <- err
+			e <- &SearchError{source: "duckduckgo", message: "Error parsing JSON"}
 			return
 		}
 	}

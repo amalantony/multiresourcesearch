@@ -1,5 +1,5 @@
 package search
 
-func getTwitterResults(query string, ch chan Results) {
+func getTwitterResults(query string, r chan Results, e chan error) {
 
 }
