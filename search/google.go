@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -13,7 +14,12 @@ const (
 )
 
 func getGoogleResults(query string, r chan Results, e chan error) {
-	url := "https://www.googleapis.com/customsearch/v1?key=" + apiKey + "&cx=" + customSearchEngineID + "&q=" + query
+	Url, _ := url.Parse("https://www.googleapis.com/customsearch/v1")
+	parameters := url.Values{}
+	parameters.Add("key", apiKey)
+	parameters.Add("cx", customSearchEngineID)
+	parameters.Add("q", query)
+	Url.RawQuery = parameters.Encode()
 	var myClient = &http.Client{Timeout: 1 * time.Second}
 	type googleResponse struct {
 		Items []struct {
@@ -21,7 +27,7 @@ func getGoogleResults(query string, r chan Results, e chan error) {
 			Snippet string `json:"snippet"`
 		} `json:"items"`
 	}
-	res, err := myClient.Get(url)
+	res, err := myClient.Get(Url.String())
 	if err != nil {
 		e <- &SearchError{source: "google", message: "Request Timed out"}
 		return

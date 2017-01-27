@@ -4,11 +4,16 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
 
 func getDuckDuckGoResults(query string, r chan Results, e chan error) {
-	url := "http://api.duckduckgo.com/?q=" + query + "&format=json"
+	Url, _ := url.Parse("http://api.duckduckgo.com/")
+	parameters := url.Values{}
+	parameters.Add("q", query)
+	parameters.Add("format", "json")
+	Url.RawQuery = parameters.Encode()
 	var myClient = &http.Client{Timeout: 1 * time.Second}
 	type duckduckgoResponse struct {
 		RelatedTopics []struct {
@@ -16,7 +21,7 @@ func getDuckDuckGoResults(query string, r chan Results, e chan error) {
 			Text     string `json:"Text"`
 		} `json:"RelatedTopics"`
 	}
-	res, err := myClient.Get(url)
+	res, err := myClient.Get(Url.String())
 	if err != nil {
 		e <- &SearchError{source: "duckduckgo", message: "Request Timed out"}
 		return

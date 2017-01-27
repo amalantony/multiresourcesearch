@@ -20,6 +20,7 @@ type SearchError struct {
 
 // AggregatedResults ... store the aggreated search results
 type AggregatedResults struct {
+	Query  string
 	Data   map[string][]SearchResult
 	Errors []string
 }
@@ -37,7 +38,7 @@ func Search(query string) AggregatedResults {
 	go getGoogleResults(query, r, e)
 	go getTwitterResults(query, r, e)
 
-	aggregatedResults := AggregatedResults{Data: make(map[string][]SearchResult)}
+	aggregatedResults := AggregatedResults{Query: query, Data: make(map[string][]SearchResult)}
 
 	cnt := 0
 
