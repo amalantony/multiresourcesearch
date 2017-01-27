@@ -7,8 +7,13 @@ import (
 	"time"
 )
 
+const (
+	apiKey               = "AIzaSyD5bMRAkJmNSgE-TtsW21uTZMDMMNPE0rM"
+	customSearchEngineID = "015968340880156748630%3Aui5gmgfozyu"
+)
+
 func getGoogleResults(query string, r chan Results, e chan error) {
-	url := "https://www.googleapis.com/customsearch/v1?key=AIzaSyD5bMRAkJmNSgE-TtsW21uTZMDMMNPE0rM&cx=015968340880156748630%3Aui5gmgfozyu&q=" + query
+	url := "https://www.googleapis.com/customsearch/v1?key=" + apiKey + "&cx=" + customSearchEngineID + "&q=" + query
 	var myClient = &http.Client{Timeout: 1 * time.Second}
 	type googleResponse struct {
 		Items []struct {
