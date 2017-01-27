@@ -20,23 +20,29 @@ func getTwitterResults(query string, r chan Results, e chan error) {
 	anaconda.SetConsumerSecret(consumerSecret)
 	api := anaconda.NewTwitterApi(accessToken, accessTokenSecret)
 	ch := make(chan Results)
+	ech := make(chan error)
 	after := time.After(1 * time.Second)
-	var resultArray []searchResult
-	go func(ch chan Results) {
-		results, _ := api.GetSearch(query, nil)
-		resultArray = make([]searchResult, len(results.Statuses))
+	go func(ch chan Results, ech chan error) {
+		results, err := api.GetSearch(query, nil)
+		if err != nil {
+			ech <- &SearchError{source: "twitter", message: "Error making Request"}
+			return
+		}
+		var resultArray []SearchResult
 		for _, tweet := range results.Statuses {
 			url := "https://twitter.com/statuses/" + strconv.FormatInt(tweet.Id, 10)
-			el := searchResult{text: tweet.Text, url: url}
+			el := SearchResult{Text: tweet.Text, URL: url}
 			resultArray = append(resultArray, el)
 		}
 		twitterResults := Results{source: "twitter", results: resultArray}
 		ch <- twitterResults
-	}(ch)
+	}(ch, ech)
 	select {
-	case <-after: //timedout
-		e <- &searchError{source: "twitter", message: "Request timed out!"}
-	case twitterResults := <-ch: //
+	case <-after: // request timed out
+		e <- &SearchError{source: "twitter", message: "Request Timed out"}
+	case twitterResults := <-ch:
 		r <- twitterResults
+	case twitterError := <-ech:
+		e <- twitterError
 	}
 }

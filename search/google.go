@@ -23,7 +23,7 @@ func getGoogleResults(query string, r chan Results, e chan error) {
 	}
 	res, err := myClient.Get(url)
 	if err != nil {
-		e <- &searchError{source: "google", message: "Request Timed out"}
+		e <- &SearchError{source: "google", message: "Request Timed out"}
 		return
 	}
 	decoder := json.NewDecoder(res.Body)
@@ -32,13 +32,13 @@ func getGoogleResults(query string, r chan Results, e chan error) {
 		if err := decoder.Decode(&response); err == io.EOF {
 			break
 		} else if err != nil {
-			e <- &searchError{source: "google", message: "Error parsing JSON"}
+			e <- &SearchError{source: "google", message: "Error parsing JSON"}
 			return
 		}
 	}
-	resultArray := make([]searchResult, len(response.Items))
+	var resultArray []SearchResult
 	for _, element := range response.Items {
-		el := searchResult{text: element.Snippet, url: element.Link}
+		el := SearchResult{Text: element.Snippet, URL: element.Link}
 		resultArray = append(resultArray, el)
 	}
 	googleResults := Results{source: "google", results: resultArray}

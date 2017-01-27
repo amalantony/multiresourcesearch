@@ -1,31 +1,35 @@
 package search
 
-import (
-	"fmt"
-	"time"
-)
+import "fmt"
 
-type searchResult struct { // individual search result
-	url, text string
+// SearchResult ... individual search result
+type SearchResult struct {
+	URL, Text string
 }
 
-// Results ... Results is a collection of searchResults from a particular source
+// Results ... collection of searchResults from a source
 type Results struct {
 	source  string
-	results []searchResult
+	results []SearchResult
 }
 
-// SearchError ... Error type for searches
-type searchError struct {
+// SearchError ... error implementation
+type SearchError struct {
 	source, message string
 }
 
-func (e *searchError) Error() string {
+// AggregatedResults ... store the aggreated search results
+type AggregatedResults struct {
+	Data   map[string][]SearchResult
+	Errors []string
+}
+
+func (e *SearchError) Error() string {
 	return fmt.Sprintf("%s - %s", e.source, e.message)
 }
 
 // Search ... perform the multi resource parallel search
-func Search(query string) {
+func Search(query string) AggregatedResults {
 	r := make(chan Results)
 	e := make(chan error)
 
@@ -33,22 +37,21 @@ func Search(query string) {
 	go getGoogleResults(query, r, e)
 	go getTwitterResults(query, r, e)
 
+	aggregatedResults := AggregatedResults{Data: make(map[string][]SearchResult)}
+
 	cnt := 0
+
 	for {
 		select {
 		case searchResults := <-r:
-			// look at searchResults.source and construct response
-			fmt.Println(searchResults)
+			aggregatedResults.Data[searchResults.source] = searchResults.results
 			cnt++
 		case errors := <-e:
-			// look at error type & construct response
-			fmt.Println(errors)
+			aggregatedResults.Errors = append(aggregatedResults.Errors, errors.Error())
 			cnt++
 		}
 		if cnt == 3 { // break out after getting values/errors from each of the 3 go-routines
-			break
+			return aggregatedResults
 		}
 	}
-
-	time.Sleep(time.Second) // for debugging print, remove in production
 }
