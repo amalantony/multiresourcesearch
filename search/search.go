@@ -9,18 +9,18 @@ type searchResult struct { // individual search result
 	url, text string
 }
 
-// Results ... Results is an array of the result type
+// Results ... Results is a collection of searchResults from a particular source
 type Results struct {
 	source  string
 	results []searchResult
 }
 
 // SearchError ... Error type for searches
-type SearchError struct {
+type searchError struct {
 	source, message string
 }
 
-func (e *SearchError) Error() string {
+func (e *searchError) Error() string {
 	return fmt.Sprintf("%s - %s", e.source, e.message)
 }
 
@@ -31,7 +31,7 @@ func Search(query string) {
 
 	go getDuckDuckGoResults(query, r, e)
 	go getGoogleResults(query, r, e)
-	// go getTwitterResults(query, r, e)
+	go getTwitterResults(query, r, e)
 
 	cnt := 0
 	for {
@@ -45,10 +45,10 @@ func Search(query string) {
 			fmt.Println(errors)
 			cnt++
 		}
-		if cnt == 2 { // break out after getting values/errors from each of the 3 go-routines
+		if cnt == 3 { // break out after getting values/errors from each of the 3 go-routines
 			break
 		}
 	}
 
-	time.Sleep(time.Second) // for debugging print
+	time.Sleep(time.Second) // for debugging print, remove in production
 }

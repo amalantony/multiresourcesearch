@@ -18,25 +18,23 @@ func getGoogleResults(query string, r chan Results, e chan error) {
 	}
 	res, err := myClient.Get(url)
 	if err != nil {
-		e <- &SearchError{source: "google", message: "Request Timed out"}
+		e <- &searchError{source: "google", message: "Request Timed out"}
 		return
 	}
-	dec := json.NewDecoder(res.Body)
+	decoder := json.NewDecoder(res.Body)
 	var response googleResponse
 	for {
-		if err := dec.Decode(&response); err == io.EOF {
+		if err := decoder.Decode(&response); err == io.EOF {
 			break
 		} else if err != nil {
-			e <- &SearchError{source: "google", message: "Error parsing JSON"}
+			e <- &searchError{source: "google", message: "Error parsing JSON"}
 			return
 		}
 	}
 	resultArray := make([]searchResult, len(response.Items))
 	for _, element := range response.Items {
 		el := searchResult{text: element.Snippet, url: element.Link}
-		if len(el.url) > 0 {
-			resultArray = append(resultArray, el)
-		}
+		resultArray = append(resultArray, el)
 	}
 	googleResults := Results{source: "google", results: resultArray}
 	r <- googleResults

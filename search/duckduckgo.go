@@ -18,25 +18,23 @@ func getDuckDuckGoResults(query string, r chan Results, e chan error) {
 	}
 	res, err := myClient.Get(url)
 	if err != nil {
-		e <- &SearchError{source: "duckduckgo", message: "Request Timed out"}
+		e <- &searchError{source: "duckduckgo", message: "Request Timed out"}
 		return
 	}
-	dec := json.NewDecoder(res.Body)
+	decoder := json.NewDecoder(res.Body)
 	var response duckduckgoResponse
 	for {
-		if err := dec.Decode(&response); err == io.EOF {
+		if err := decoder.Decode(&response); err == io.EOF {
 			break
 		} else if err != nil {
-			e <- &SearchError{source: "duckduckgo", message: "Error parsing JSON"}
+			e <- &searchError{source: "duckduckgo", message: "Error parsing JSON"}
 			return
 		}
 	}
 	resultArray := make([]searchResult, len(response.RelatedTopics))
 	for _, element := range response.RelatedTopics {
 		el := searchResult{text: element.Text, url: element.FirstURL}
-		if len(el.url) > 0 {
-			resultArray = append(resultArray, el)
-		}
+		resultArray = append(resultArray, el)
 	}
 	duckduckgoResults := Results{source: "duckduckgo", results: resultArray}
 	r <- duckduckgoResults
