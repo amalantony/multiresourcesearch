@@ -31,6 +31,5 @@ func main() {
 	}
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomeHandler)
-	fmt.Println("Listening on 8000")
 	log.Fatal(http.ListenAndServe(":"+port, r))
 }
